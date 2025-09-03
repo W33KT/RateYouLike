@@ -10,10 +10,10 @@ public class RegexUtils {
     /**
      * validate phone number
      * @param phone phone number to validate
-     * @return true: valid, false: invalid
+     * @return true: invalid, false: valid
      */
     public static boolean isPhoneInvalid(String phone){
-        return mismatch(phone, RegexPatterns.PHONE_REGEX);
+        return mismatch(phone, RegexPatterns.NL_PHONE_REGEX);
     }
     /**
      * 是否是无效邮箱格式

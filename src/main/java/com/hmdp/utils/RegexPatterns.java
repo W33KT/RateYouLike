@@ -5,9 +5,10 @@ package com.hmdp.utils;
  */
 public abstract class RegexPatterns {
     /**
-     * 手机号正则
+     * Regex pattern for Dutch mobile numbers.
+     * Matches both domestic format (06xxxxxxxx) and international format (+316xxxxxxxx or 00316xxxxxxxx).
      */
-    public static final String PHONE_REGEX = "^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\\d{8}$";
+    public static final String NL_PHONE_REGEX = "^(06\\d{8}|(\\+31|0031)6\\d{8})$";;
     /**
      * 邮箱正则
      */
