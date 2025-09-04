@@ -1,7 +1,7 @@
-package com.hmdp.utils;
+package com.hmdp.constants;
 
 /**
- * @author 虎哥
+ * @author tankaiwen
  */
 public abstract class RegexPatterns {
     /**

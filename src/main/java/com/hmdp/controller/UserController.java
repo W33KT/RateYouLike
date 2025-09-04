@@ -4,6 +4,7 @@ package com.hmdp.controller;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.UserInfo;
+import com.hmdp.facade.UserFacade;
 import com.hmdp.service.IUserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,8 @@ import javax.servlet.http.HttpSession;
 @RequestMapping("/user")
 public class UserController {
     @Resource
+    private UserFacade userFacade;
+    @Resource
     private IUserInfoService userInfoService;
 
     /**
@@ -31,18 +34,16 @@ public class UserController {
      */
     @PostMapping("code")
     public Result sendCode(@RequestParam("phone") String phone, HttpSession session) {
-        // TODO 发送短信验证码并保存验证码
-        return Result.fail("功能未完成");
+        return userFacade.sendCode(phone, session);
     }
 
     /**
-     * 登录功能
-     * @param loginForm 登录参数，包含手机号、验证码；或者手机号、密码
+     * user login function
+     * @param loginForm containing phone number, password, verification code
      */
     @PostMapping("/login")
     public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
-        // TODO 实现登录功能
-        return Result.fail("功能未完成");
+        return userFacade.login(loginForm, session);
     }
 
     /**

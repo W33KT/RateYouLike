@@ -1,5 +1,6 @@
 package com.hmdp.facade;
 
+import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.service.IUserService;
 import org.springframework.stereotype.Service;
@@ -19,5 +20,9 @@ public class UserFacade {
         userService.sendCode(phone, session);
 
         return Result.ok();
+    }
+
+    public Result login(LoginFormDTO loginForm, HttpSession session) {
+
     }
 }
