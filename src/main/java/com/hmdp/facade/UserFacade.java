@@ -23,6 +23,8 @@ public class UserFacade {
     }
 
     public Result login(LoginFormDTO loginForm, HttpSession session) {
+        String token = userService.login(loginForm, session);
 
+        return Result.ok(token);
     }
 }

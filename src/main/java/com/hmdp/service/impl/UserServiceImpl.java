@@ -1,19 +1,27 @@
 package com.hmdp.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.constants.RedisConstants;
 import com.hmdp.constants.SystemConstants;
 import com.hmdp.dto.LoginFormDTO;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.ValidateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -22,6 +30,9 @@ import java.util.Objects;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
     @Override
     public void sendCode(String phone, HttpSession session) {
         // 1. validate param and phone number format
@@ -31,8 +42,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 2. generate verify code
         String verifyCode = RandomUtil.randomString(6);
 
-        // 3. save verify code to session
-        session.setAttribute(phone + SystemConstants.SESSION_VERIFY_CODE_KEY_SUFFIX, verifyCode);
+        // 3. save verify code to redis
+        stringRedisTemplate.opsForValue().set(RedisConstants.LOGIN_CODE_KEY + phone, verifyCode,
+                RedisConstants.LOGIN_CODE_TTL, TimeUnit.MINUTES);
 
         // 4. send verify code
         // This is a mock implementation for sending verify codes.
@@ -41,7 +53,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
-    public void login(LoginFormDTO loginForm, HttpSession session) {
+    public String login(LoginFormDTO loginForm, HttpSession session) {
         // 1. validate params, phone number format and verification code,
         //    judge whether verify code equals to the one in session
         validateLoginParam(loginForm, session);
@@ -54,8 +66,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user = createNewUser(loginForm.getPhone());
         }
 
-        // 4. save user to session
-        session.setAttribute(SystemConstants.SESSION_USER_KEY, user);
+        // 4. generate token
+        String token = UUID.randomUUID().toString(true);
+
+        // 5. convert user data to hashmap and save it in redis
+        UserDTO userDTO = UserDTO.convertFromUser(user);
+        stringRedisTemplate.opsForHash().putAll(
+                RedisConstants.LOGIN_USER_KEY + token,
+                BeanUtil.beanToMap(userDTO.convertToDTO4Redis()));
+        stringRedisTemplate.expire(RedisConstants.LOGIN_USER_KEY + token, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+
+        // 6. return token
+        return token;
     }
 
     private void validateLoginParam(LoginFormDTO loginForm, HttpSession session) {
@@ -66,8 +88,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     private void checkVerifyCode(String phone, String verifyCode, HttpSession session) {
-        Object codeInSession = session.getAttribute(phone + SystemConstants.SESSION_VERIFY_CODE_KEY_SUFFIX);
-        ValidateUtils.isTrue(Objects.nonNull(codeInSession) && codeInSession.toString().equals(verifyCode), "Invalid verify code!");
+        String codeInSession = stringRedisTemplate.opsForValue().get(RedisConstants.LOGIN_CODE_KEY + phone);
+        ValidateUtils.isTrue(StringUtils.equals(verifyCode, codeInSession), "Invalid verify code!");
     }
 
     private User createNewUser(String phone) {

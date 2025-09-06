@@ -8,6 +8,4 @@ public class SystemConstants {
     public static final String USER_NICK_NAME_PREFIX = "user_";
     public static final int DEFAULT_PAGE_SIZE = 5;
     public static final int MAX_PAGE_SIZE = 10;
-    public static final String SESSION_VERIFY_CODE_KEY_SUFFIX = "_verify_code";
-    public static final String SESSION_USER_KEY = "user";
 }

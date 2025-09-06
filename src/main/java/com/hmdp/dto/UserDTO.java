@@ -22,4 +22,26 @@ public class UserDTO {
                 .setNickName(user.getNickName())
                 .setIcon(user.getIcon());
     }
+
+    public UserDTO4RedisString convertToDTO4Redis() {
+        return new UserDTO4RedisString()
+                .setId(id.toString())
+                .setNickName(nickName)
+                .setIcon(icon);
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class UserDTO4RedisString {
+        private String id;
+        private String nickName;
+        private String icon;
+
+        public UserDTO convertToDTO() {
+            return new UserDTO()
+                    .setId(Long.parseLong(id))
+                    .setNickName(nickName)
+                    .setIcon(icon);
+        }
+    }
 }
