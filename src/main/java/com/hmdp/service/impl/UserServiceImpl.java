@@ -6,7 +6,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.constants.RedisConstants;
 import com.hmdp.constants.SystemConstants;
-import com.hmdp.dto.LoginFormDTO;
+import com.hmdp.vo.LoginFormReqVO;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
@@ -55,7 +55,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
-    public String login(LoginFormDTO loginForm, HttpSession session) {
+    public String login(LoginFormReqVO loginForm, HttpSession session) {
         // 1. validate params, phone number format and verification code,
         //    judge whether verify code equals to the one in session
         validateLoginParam(loginForm, session);
@@ -82,7 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return token;
     }
 
-    private void validateLoginParam(LoginFormDTO loginForm, HttpSession session) {
+    private void validateLoginParam(LoginFormReqVO loginForm, HttpSession session) {
         ValidateUtils.notNull(session, "Session is null!");
         ValidateUtils.notNull(loginForm, "Login information is null!");
         ValidateUtils.isTrue(!RegexUtils.isPhoneInvalid( loginForm.getPhone()), "Invalid phone number!");

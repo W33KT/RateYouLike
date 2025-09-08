@@ -1,6 +1,6 @@
 package com.hmdp.facade;
 
-import com.hmdp.dto.LoginFormDTO;
+import com.hmdp.vo.LoginFormReqVO;
 import com.hmdp.dto.Result;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.ValidateUtils;
@@ -24,7 +24,7 @@ public class UserFacade {
         return Result.ok();
     }
 
-    public Result login(LoginFormDTO loginForm, HttpSession session) {
+    public Result login(LoginFormReqVO loginForm, HttpSession session) {
         String token = userService.login(loginForm, session);
 
         return Result.ok(token);

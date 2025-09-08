@@ -1,7 +1,7 @@
 package com.hmdp.controller;
 
 
-import com.hmdp.dto.LoginFormDTO;
+import com.hmdp.vo.LoginFormReqVO;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.UserInfo;
 import com.hmdp.facade.UserFacade;
@@ -44,7 +44,7 @@ public class UserController {
      * @param loginForm containing phone number, password, verification code
      */
     @PostMapping("/login")
-    public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
+    public Result login(@RequestBody LoginFormReqVO loginForm, HttpSession session){
         return userFacade.login(loginForm, session);
     }
 

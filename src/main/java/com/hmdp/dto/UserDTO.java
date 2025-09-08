@@ -1,6 +1,7 @@
 package com.hmdp.dto;
 
 import com.hmdp.entity.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -9,8 +10,13 @@ import java.util.Objects;
 @Data
 @Accessors(chain = true)
 public class UserDTO {
+    @Schema(description = "user id")
     private Long id;
+
+    @Schema(description = "user name")
     private String nickName;
+
+    @Schema(description = "user icon")
     private String icon;
 
     public static UserDTO convertFromUser(User user) {
