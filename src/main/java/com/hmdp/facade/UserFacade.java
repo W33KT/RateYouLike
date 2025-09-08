@@ -3,9 +3,11 @@ package com.hmdp.facade;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.service.IUserService;
+import com.hmdp.utils.ValidateUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -26,5 +28,13 @@ public class UserFacade {
         String token = userService.login(loginForm, session);
 
         return Result.ok(token);
+    }
+
+    public Result logout(HttpServletRequest request) {
+        ValidateUtils.notNull(request, "Request is null!");
+
+        userService.logout(request.getHeader("authorization"));
+
+        return Result.ok();
     }
 }

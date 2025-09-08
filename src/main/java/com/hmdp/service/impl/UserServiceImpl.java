@@ -12,6 +12,7 @@ import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
+import com.hmdp.utils.UserHolder;
 import com.hmdp.utils.ValidateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -98,6 +100,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setNickName(SystemConstants.USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         save(user);
         return user;
+    }
+
+    @Override
+    public void logout(String token) {
+        // 1. get user's Nick name
+        String name = UserHolder.getUser().getNickName();
+        if (StringUtils.isBlank( name)) {
+            log.warn("Logout: User's nick name is blank");
+        }
+
+        // 2. get current time
+        LocalDateTime now = LocalDateTime.now();
+
+        // 3. delete user's token
+        stringRedisTemplate.delete(RedisConstants.LOGIN_USER_KEY + token);
+
+        // 4. delete user data from thread local
+        UserHolder.removeUser();
+
+        // 5. write log
+        log.info("User {} logout at {}", name, now);
     }
 }
 
