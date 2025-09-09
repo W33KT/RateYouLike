@@ -1,19 +1,17 @@
-package com.hmdp.service.impl;
+package com.hmdp.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.constants.RedisConstants;
 import com.hmdp.constants.SystemConstants;
-import com.hmdp.vo.LoginFormReqVO;
+import com.hmdp.dao.IUserDAO;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
-import com.hmdp.mapper.UserMapper;
-import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.UserHolder;
 import com.hmdp.utils.ValidateUtils;
+import com.hmdp.vo.request.LoginFormReqVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -25,17 +23,17 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-
 /**
  * @author tankaiwen
  */
 @Service
 @Slf4j
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+public class UserService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private IUserDAO userDAO;
 
-    @Override
     public void sendCode(String phone, HttpSession session) {
         // 1. validate param and phone number format
         ValidateUtils.notNull(session, "Session is null!");
@@ -54,14 +52,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         log.debug("Sent verify code: {} to phone: {}", verifyCode, phone);
     }
 
-    @Override
     public String login(LoginFormReqVO loginForm, HttpSession session) {
         // 1. validate params, phone number format and verification code,
         //    judge whether verify code equals to the one in session
         validateLoginParam(loginForm, session);
 
         // 2. query user by phone number
-        User user = query().eq("phone", loginForm.getPhone()).one();
+        User user = userDAO.query().eq("phone", loginForm.getPhone()).one();
 
         // 3. judge whether user exists, create user if not exists
         if (Objects.isNull(user)) {
@@ -98,11 +95,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = new User();
         user.setPhone(phone);
         user.setNickName(SystemConstants.USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
-        save(user);
+        userDAO.save(user);
         return user;
     }
 
-    @Override
     public void logout(String token) {
         // 1. get user's Nick name
         String name = UserHolder.getUser().getNickName();
@@ -123,4 +119,3 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         log.info("User {} logout at {}", name, now);
     }
 }
-

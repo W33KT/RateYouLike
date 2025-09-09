@@ -1,9 +1,9 @@
 package com.hmdp.facade;
 
-import com.hmdp.vo.LoginFormReqVO;
 import com.hmdp.dto.Result;
-import com.hmdp.service.IUserService;
+import com.hmdp.service.UserService;
 import com.hmdp.utils.ValidateUtils;
+import com.hmdp.vo.request.LoginFormReqVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 @Service
 public class UserFacade {
     @Resource
-    private IUserService userService;
+    private UserService userService;
 
     public Result sendCode(String phone, HttpSession session) {
         userService.sendCode(phone, session);

@@ -2,10 +2,14 @@ package com.hmdp.facade;
 
 import com.hmdp.dto.Result;
 import com.hmdp.dto.ShopDTO;
-import com.hmdp.service.IShopService;
+import com.hmdp.dto.ShopTypeDTO;
+import com.hmdp.service.ShopService;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author tankaiwen
@@ -13,11 +17,17 @@ import javax.annotation.Resource;
 @Service
 public class ShopFacade {
     @Resource
-    public IShopService shopService;
+    public ShopService shopService;
 
     public Result queryShopById(Long id) {
-        ShopDTO shopDTO = shopService.queryShopByIdRedis(id);
+        ShopDTO shopDTO = shopService.queryShopById(id);
 
-        return Result.ok(shopDTO);
+        return Result.ok(Objects.isNull(shopDTO) ? null : shopDTO.convertToVO());
+    }
+
+    public Result listShopTypes() {
+        List<ShopTypeDTO> shopTypes = shopService.listShopTypes();
+
+        return Result.ok(ListUtils.emptyIfNull(shopTypes).stream().map(ShopTypeDTO::convertToVO).toList());
     }
 }

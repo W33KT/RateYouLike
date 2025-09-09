@@ -6,8 +6,8 @@ import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.entity.User;
-import com.hmdp.service.IBlogService;
-import com.hmdp.service.IUserService;
+import com.hmdp.dao.IBlogDAO;
+import com.hmdp.dao.IUserDAO;
 import com.hmdp.constants.SystemConstants;
 import com.hmdp.utils.UserHolder;
 import org.springframework.web.bind.annotation.*;
@@ -28,9 +28,9 @@ import java.util.List;
 public class BlogController {
 
     @Resource
-    private IBlogService blogService;
+    private IBlogDAO blogService;
     @Resource
-    private IUserService userService;
+    private IUserDAO userService;
 
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog) {

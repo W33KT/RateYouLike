@@ -1,7 +1,7 @@
-package com.hmdp.service;
+package com.hmdp.dao;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.hmdp.entity.Follow;
+import com.hmdp.entity.Blog;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import com.hmdp.entity.Follow;
  * @author 虎哥
  * @since 2021-12-22
  */
-public interface IFollowService extends IService<Follow> {
+public interface IBlogDAO extends IService<Blog> {
 
 }

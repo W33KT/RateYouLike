@@ -6,34 +6,30 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.facade.ShopFacade;
-import com.hmdp.service.IShopService;
+import com.hmdp.dao.IShopDAO;
 import com.hmdp.constants.SystemConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
+
 /**
- * <p>
- * 前端控制器
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * @author tankaiwen
  */
 @RestController
 @RequestMapping("/shop")
 public class ShopController {
 
     @Resource
-    public IShopService shopService;
+    public IShopDAO shopService;
     @Autowired
     private ShopFacade shopFacade;
 
     /**
-     * 根据id查询商铺信息
-     * @param id 商铺id
-     * @return 商铺详情数据
+     * query shop info by id
+     * @param id shop id
+     * @return shop info
      */
     @GetMapping("/{id}")
     public Result queryShopById(@PathVariable("id") Long id) {

@@ -1,7 +1,7 @@
-package com.hmdp.service;
+package com.hmdp.dao;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.hmdp.entity.VoucherOrder;
+import com.hmdp.entity.BlogComments;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import com.hmdp.entity.VoucherOrder;
  * @author 虎哥
  * @since 2021-12-22
  */
-public interface IVoucherOrderService extends IService<VoucherOrder> {
+public interface IBlogCommentsDAO extends IService<BlogComments> {
 
 }

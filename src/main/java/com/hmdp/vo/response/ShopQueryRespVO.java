@@ -1,4 +1,4 @@
-package com.hmdp.vo;
+package com.hmdp.vo.response;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

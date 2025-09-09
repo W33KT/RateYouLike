@@ -1,18 +1,13 @@
-package com.hmdp.service;
+package com.hmdp.dao;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Voucher;
 
 /**
- * <p>
- *  服务类
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * @author tankaiwen
  */
-public interface IVoucherService extends IService<Voucher> {
+public interface IVoucherDAO extends IService<Voucher> {
 
     Result queryVoucherOfShop(Long shopId);
 

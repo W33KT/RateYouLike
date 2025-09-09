@@ -1,11 +1,11 @@
 package com.hmdp.controller;
 
 
-import com.hmdp.vo.LoginFormReqVO;
+import com.hmdp.vo.request.LoginFormReqVO;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.UserInfo;
 import com.hmdp.facade.UserFacade;
-import com.hmdp.service.IUserInfoService;
+import com.hmdp.dao.IUserInfoDAO;
 import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +29,7 @@ public class UserController {
     @Resource
     private UserFacade userFacade;
     @Resource
-    private IUserInfoService userInfoService;
+    private IUserInfoDAO userInfoService;
 
     /**
      * send phone number verification code

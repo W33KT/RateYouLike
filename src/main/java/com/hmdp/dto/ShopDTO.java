@@ -1,6 +1,7 @@
 package com.hmdp.dto;
 
 import com.hmdp.entity.Shop;
+import com.hmdp.vo.response.ShopQueryRespVO;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -67,5 +68,25 @@ public class ShopDTO {
                 .setCreateTime(shop.getCreateTime())
                 .setUpdateTime(shop.getUpdateTime())
                 .setDistance(shop.getDistance());
+    }
+
+    public ShopQueryRespVO convertToVO() {
+        return new ShopQueryRespVO()
+                .setId(getId())
+                .setName(getName())
+                .setTypeId(getTypeId())
+                .setImages(getImages())
+                .setArea(getArea())
+                .setAddress(getAddress())
+                .setX(getX())
+                .setY(getY())
+                .setAvgPrice(getAvgPrice())
+                .setSold(getSold())
+                .setComments(getComments())
+                .setScore(getScore())
+                .setOpenHours(getOpenHours())
+                .setCreateTime(getCreateTime())
+                .setUpdateTime(getUpdateTime())
+                .setDistance(getDistance());
     }
 }
