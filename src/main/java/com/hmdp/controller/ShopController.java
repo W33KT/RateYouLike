@@ -8,6 +8,7 @@ import com.hmdp.entity.Shop;
 import com.hmdp.facade.ShopFacade;
 import com.hmdp.dao.IShopDAO;
 import com.hmdp.constants.SystemConstants;
+import com.hmdp.vo.request.ShopUpdateReqVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,28 +38,23 @@ public class ShopController {
     }
 
     /**
-     * 新增商铺信息
-     * @param shop 商铺数据
-     * @return 商铺id
+     * add new shop info
+     * @param reqVO shop info to insert
+     * @return shop id
      */
     @PostMapping
-    public Result saveShop(@RequestBody Shop shop) {
-        // 写入数据库
-        shopService.save(shop);
-        // 返回店铺id
-        return Result.ok(shop.getId());
+    public Result saveShop(@RequestBody ShopUpdateReqVO reqVO) {
+        return shopFacade.saveShop(reqVO);
     }
 
     /**
-     * 更新商铺信息
-     * @param shop 商铺数据
+     * update shop info
+     * @param reqVO shop info to update
      * @return 无
      */
     @PutMapping
-    public Result updateShop(@RequestBody Shop shop) {
-        // 写入数据库
-        shopService.updateById(shop);
-        return Result.ok();
+    public Result updateShop(@RequestBody ShopUpdateReqVO reqVO) {
+        return shopFacade.updateShop(reqVO);
     }
 
     /**

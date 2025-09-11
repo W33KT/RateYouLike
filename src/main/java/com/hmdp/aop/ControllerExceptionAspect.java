@@ -1,7 +1,6 @@
 package com.hmdp.aop;
 
 import com.hmdp.dto.Result;
-import com.hmdp.exception.BaseException;
 import com.hmdp.exception.BusinessException;
 import com.hmdp.exception.SystemException;
 import com.hmdp.exception.ValidateException;
@@ -37,13 +36,10 @@ public class ControllerExceptionAspect {
             return Result.fail(StringUtils.isNotBlank(ex.getMessage()) ? ex.getMessage() : "Business logic error");
         } else if (ex instanceof SystemException) {
             log.error("SystemException: {}", ex.getMessage(), ex);
-            return Result.fail("System error, please contact administrator");
-        } else if (ex instanceof BaseException) {
-            log.error("BaseException: {}", ex.getMessage(), ex);
-            return Result.fail(StringUtils.isNotBlank(ex.getMessage()) ? ex.getMessage() : "Application error");
+            return Result.fail(StringUtils.isNotBlank(ex.getMessage()) ? ex.getMessage() : "System error, please retry or contact administrator");
         } else {
             log.error("Unknown Exception: {}", ex.getMessage(), ex);
-            return Result.fail("Unknown error, please contact administrator");
+            return Result.fail(StringUtils.isNotBlank(ex.getMessage()) ? ex.getMessage() : "Unknown error, please retry or contact administrator");
         }
     }
 }

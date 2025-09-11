@@ -9,8 +9,10 @@ import lombok.experimental.Accessors;
 public class LoginFormReqVO {
     @Schema(description = "phone number", requiredMode = Schema.RequiredMode.REQUIRED)
     private String phone;
+
     @Schema(description = "verify code", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String code;
+
     @Schema(description = "password", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String password;
 }

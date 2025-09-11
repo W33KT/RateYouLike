@@ -1,7 +1,9 @@
 package com.hmdp.dto;
 
 import com.hmdp.entity.Shop;
+import com.hmdp.vo.request.ShopUpdateReqVO;
 import com.hmdp.vo.response.ShopQueryRespVO;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -26,8 +28,10 @@ public class ShopDTO {
 
     private String address;
 
+    @Schema(description = "longitude")
     private Double x;
 
+    @Schema(description = "latitude")
     private Double y;
 
     private Long avgPrice;
@@ -66,8 +70,28 @@ public class ShopDTO {
                 .setScore(shop.getScore())
                 .setOpenHours(shop.getOpenHours())
                 .setCreateTime(shop.getCreateTime())
-                .setUpdateTime(shop.getUpdateTime())
-                .setDistance(shop.getDistance());
+                .setUpdateTime(shop.getUpdateTime());
+    }
+
+    public static ShopDTO convertFromShopUpdateReqVO(ShopUpdateReqVO reqVO) {
+        if (Objects.isNull(reqVO)) {
+            return null;
+        }
+
+        return new ShopDTO()
+                .setId(reqVO.getId())
+                .setName(reqVO.getName())
+                .setTypeId(reqVO.getTypeId())
+                .setImages(reqVO.getImages())
+                .setArea(reqVO.getArea())
+                .setAddress(reqVO.getAddress())
+                .setX(reqVO.getX())
+                .setY(reqVO.getY())
+                .setAvgPrice(reqVO.getAvgPrice())
+                .setSold(reqVO.getSold())
+                .setComments(reqVO.getComments())
+                .setScore(reqVO.getScore())
+                .setOpenHours(reqVO.getOpenHours());
     }
 
     public ShopQueryRespVO convertToVO() {
@@ -88,5 +112,23 @@ public class ShopDTO {
                 .setCreateTime(getCreateTime())
                 .setUpdateTime(getUpdateTime())
                 .setDistance(getDistance());
+    }
+
+    public Shop convertToShopForInsert() {
+        return new Shop()
+                .setName( getName())
+                .setTypeId( getTypeId())
+                .setImages( getImages())
+                .setArea( getArea())
+                .setAddress( getAddress())
+                .setX( getX())
+                .setY( getY())
+                .setAvgPrice( getAvgPrice())
+                .setSold( getSold())
+                .setComments( getComments())
+                .setScore( getScore())
+                .setOpenHours( getOpenHours())
+                .setCreateTime( LocalDateTime.now())
+                .setUpdateTime( LocalDateTime.now());
     }
 }

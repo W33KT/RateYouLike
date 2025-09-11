@@ -1,5 +1,6 @@
 package com.hmdp.vo.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -23,8 +24,10 @@ public class ShopQueryRespVO {
 
     private String address;
 
+    @Schema(description = "longitude")
     private Double x;
 
+    @Schema(description = "latitude")
     private Double y;
 
     private Long avgPrice;

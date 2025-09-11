@@ -7,17 +7,22 @@ import com.hmdp.dao.IShopDAO;
 import com.hmdp.dao.IShopTypeDAO;
 import com.hmdp.dto.ShopDTO;
 import com.hmdp.dto.ShopTypeDTO;
+import com.hmdp.entity.Shop;
 import com.hmdp.exception.BusinessException;
+import com.hmdp.exception.SystemException;
 import com.hmdp.utils.ValidateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -85,4 +90,58 @@ public class ShopService {
         return shopTypeDTOList;
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public Long saveNewShop(ShopDTO shopDTO) {
+        try {
+            // 1. validate param
+            validateShopToInsert(shopDTO);
+
+            // 2. convert to mybatis object
+            Shop shop = shopDTO.convertToShopForInsert();
+
+            // 3. insert shop info to database
+            boolean res = shopDAO.save(shop);
+            if (!res) {
+                throw new SystemException("shop info DB insert failed");
+            }
+
+            // 4. return shop id
+            return shop.getId();
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException("Shop info exists!");
+        }
+    }
+
+    private void validateShopToInsert(ShopDTO shopDTO) {
+        ValidateUtils.notNull(shopDTO, "shop is null");
+        ValidateUtils.notBlank(shopDTO.getName(), "shop name is blank");
+        ValidateUtils.notNull(shopDTO.getTypeId(), "shop type is null");
+        ValidateUtils.notBlank(shopDTO.getImages(), "shop images is blank");
+        ValidateUtils.notBlank(shopDTO.getAddress(), "shop address is blank");
+        ValidateUtils.notNull(shopDTO.getX(), "shop longitude is null");
+        ValidateUtils.notNull(shopDTO.getY(), "shop latitude is null");
+        ValidateUtils.notNull(shopDTO.getAvgPrice(), "shop average price is null");
+        if (Objects.isNull(shopDTO.getSold())) {
+            shopDTO.setSold(0);
+        }
+        if (Objects.isNull(shopDTO.getComments())) {
+            shopDTO.setComments(0);
+        }
+        if (Objects.isNull(shopDTO.getScore())) {
+            shopDTO.setScore(0);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void updateShop(ShopDTO shopDTO) {
+        // 1. validate update param
+        ValidateUtils.notNull(shopDTO, "shop info is null");
+        ValidateUtils.notNull(shopDTO.getId(), "shop id is null");
+
+        // 2. update shop info in DB
+        shopDAO.updateShop(shopDTO);
+
+        // 3. delete old shop info in Redis
+        stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_KEY + shopDTO.getId());
+    }
 }

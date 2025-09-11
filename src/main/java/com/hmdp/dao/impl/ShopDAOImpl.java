@@ -1,15 +1,19 @@
 package com.hmdp.dao.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.DO.ShopQueryDO;
 import com.hmdp.dao.IShopDAO;
+import com.hmdp.dto.ShopDTO;
 import com.hmdp.entity.Shop;
+import com.hmdp.exception.SystemException;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.utils.ValidateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -39,5 +43,58 @@ public class ShopDAOImpl extends ServiceImpl<ShopMapper, Shop> implements IShopD
         }
 
         return this.list(queryWrapper);
+    }
+
+    @Override
+    public void updateShop(ShopDTO shopDTO) {
+        ValidateUtils.notNull(shopDTO, "shop info is null");
+        ValidateUtils.notNull(shopDTO.getId(), "shop id is null");
+
+        UpdateWrapper<Shop> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id", shopDTO.getId());
+        if (StringUtils.isNotBlank(shopDTO.getName())) {
+            wrapper.set("name", shopDTO.getName());
+        }
+        if (Objects.nonNull(shopDTO.getTypeId())) {
+            wrapper.set("type_id", shopDTO.getTypeId());
+        }
+        if (StringUtils.isNotBlank(shopDTO.getImages())) {
+            wrapper.set("images", shopDTO.getImages());
+        }
+        // area could be set as empty string
+        if (Objects.nonNull(shopDTO.getArea())) {
+            wrapper.set("area", shopDTO.getArea());
+        }
+        if (StringUtils.isNotBlank(shopDTO.getAddress())) {
+            wrapper.set("address", shopDTO.getAddress());
+        }
+        if (Objects.nonNull(shopDTO.getX())) {
+            wrapper.set("x", shopDTO.getX());
+        }
+        if (Objects.nonNull(shopDTO.getY())) {
+            wrapper.set("y", shopDTO.getY());
+        }
+        if (Objects.nonNull(shopDTO.getAvgPrice())) {
+            wrapper.set("avg_price", shopDTO.getAvgPrice());
+        }
+        if (Objects.nonNull(shopDTO.getSold())) {
+            wrapper.set("sold", shopDTO.getSold());
+        }
+        if (Objects.nonNull(shopDTO.getComments())) {
+            wrapper.set("comments", shopDTO.getComments());
+        }
+        if (Objects.nonNull(shopDTO.getScore())) {
+            wrapper.set("score", shopDTO.getScore());
+        }
+        // open_hours could be set as empty string
+        if (Objects.nonNull(shopDTO.getOpenHours())) {
+            wrapper.set("open_hours", shopDTO.getOpenHours());
+        }
+        wrapper.set("update_time", Objects.isNull(shopDTO.getUpdateTime()) ? LocalDateTime.now() : shopDTO.getUpdateTime());
+
+        boolean result = update(wrapper);
+        if ( !result) {
+            throw new SystemException("Update shop info failed, please refresh this web page and retry!");
+        }
     }
 }
