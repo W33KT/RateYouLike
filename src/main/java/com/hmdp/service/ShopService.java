@@ -51,19 +51,27 @@ public class ShopService {
             return JSON.parseObject(shopJson, ShopDTO.class);
         }
 
-        // 4. if no, query shop info from database
+        // 4. if shopJson is empty string, notify client that shop info not exist directly
+        if (StringUtils.equals("", shopJson)) {
+            throw new BusinessException("shop not exist");
+        }
+
+        // 5. if no, query shop info from database
         List<ShopDTO> dbShopDTOList = ListUtils.emptyIfNull(shopDAO.queryShop(new ShopQueryDO().setId(id)))
                 .stream()
                 .map(ShopDTO::convertFromShop)
                 .toList();
+
+        // 6. if shop info doesn't exist in data base, set empty string in redis
         if (CollectionUtils.isEmpty(dbShopDTOList)) {
+            stringRedisTemplate.opsForValue().set(redisKey, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             throw new BusinessException("shop not exist");
         }
 
-        // 5. save shop info to redis
+        // 7. save shop info to redis
         stringRedisTemplate.opsForValue().set(redisKey, JSON.toJSONString(dbShopDTOList.get(0)), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
 
-        // 6. return shop info
+        // 8. return shop info
         return dbShopDTOList.get(0);
     }
 
