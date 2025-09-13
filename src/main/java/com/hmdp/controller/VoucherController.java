@@ -3,7 +3,7 @@ package com.hmdp.controller;
 
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Voucher;
-import com.hmdp.dao.IVoucherDAO;
+import com.hmdp.dao.VoucherDAO;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 public class VoucherController {
 
     @Resource
-    private IVoucherDAO voucherService;
+    private VoucherDAO voucherDAO;
 
     /**
      * 新增普通券
@@ -30,7 +30,7 @@ public class VoucherController {
      */
     @PostMapping
     public Result addVoucher(@RequestBody Voucher voucher) {
-        voucherService.save(voucher);
+        voucherDAO.save(voucher);
         return Result.ok(voucher.getId());
     }
 
@@ -41,7 +41,7 @@ public class VoucherController {
      */
     @PostMapping("seckill")
     public Result addSeckillVoucher(@RequestBody Voucher voucher) {
-        voucherService.addSeckillVoucher(voucher);
+        voucherDAO.addSeckillVoucher(voucher);
         return Result.ok(voucher.getId());
     }
 
@@ -52,6 +52,6 @@ public class VoucherController {
      */
     @GetMapping("/list/{shopId}")
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
-       return voucherService.queryVoucherOfShop(shopId);
+       return voucherDAO.queryVoucherOfShop(shopId);
     }
 }

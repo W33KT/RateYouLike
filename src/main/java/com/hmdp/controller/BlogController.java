@@ -6,8 +6,8 @@ import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.entity.User;
-import com.hmdp.dao.IBlogDAO;
-import com.hmdp.dao.IUserDAO;
+import com.hmdp.dao.BlogDAO;
+import com.hmdp.dao.UserDAO;
 import com.hmdp.constants.SystemConstants;
 import com.hmdp.utils.UserHolder;
 import org.springframework.web.bind.annotation.*;
@@ -16,21 +16,16 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * <p>
- * 前端控制器
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * @author tankaiwen
  */
 @RestController
 @RequestMapping("/blog")
 public class BlogController {
 
     @Resource
-    private IBlogDAO blogService;
+    private BlogDAO blogDAO;
     @Resource
-    private IUserDAO userService;
+    private UserDAO userDAO;
 
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog) {
@@ -38,7 +33,7 @@ public class BlogController {
         UserDTO user = UserHolder.getUser();
         blog.setUserId(user.getId());
         // 保存探店博文
-        blogService.save(blog);
+        blogDAO.save(blog);
         // 返回id
         return Result.ok(blog.getId());
     }
@@ -46,7 +41,7 @@ public class BlogController {
     @PutMapping("/like/{id}")
     public Result likeBlog(@PathVariable("id") Long id) {
         // 修改点赞数量
-        blogService.update()
+        blogDAO.update()
                 .setSql("liked = liked + 1").eq("id", id).update();
         return Result.ok();
     }
@@ -56,7 +51,7 @@ public class BlogController {
         // 获取登录用户
         UserDTO user = UserHolder.getUser();
         // 根据用户查询
-        Page<Blog> page = blogService.query()
+        Page<Blog> page = blogDAO.query()
                 .eq("user_id", user.getId()).page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
         List<Blog> records = page.getRecords();
@@ -66,7 +61,7 @@ public class BlogController {
     @GetMapping("/hot")
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
         // 根据用户查询
-        Page<Blog> page = blogService.query()
+        Page<Blog> page = blogDAO.query()
                 .orderByDesc("liked")
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 获取当前页数据
@@ -74,7 +69,7 @@ public class BlogController {
         // 查询用户
         records.forEach(blog ->{
             Long userId = blog.getUserId();
-            User user = userService.getById(userId);
+            User user = userDAO.getById(userId);
             blog.setName(user.getNickName());
             blog.setIcon(user.getIcon());
         });

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.DO.ShopQueryDO;
-import com.hmdp.dao.IShopDAO;
+import com.hmdp.dao.ShopDAO;
 import com.hmdp.dto.ShopDTO;
 import com.hmdp.entity.Shop;
 import com.hmdp.exception.SystemException;
@@ -21,7 +21,7 @@ import java.util.Objects;
  * @author tankaiwen
  */
 @Service
-public class ShopDAOImpl extends ServiceImpl<ShopMapper, Shop> implements IShopDAO {
+public class ShopDAOImpl extends ServiceImpl<ShopMapper, Shop> implements ShopDAO {
     @Override
     public List<Shop> queryShop(ShopQueryDO queryDO) {
         ValidateUtils.notNull(queryDO, "Shop query param is null!");

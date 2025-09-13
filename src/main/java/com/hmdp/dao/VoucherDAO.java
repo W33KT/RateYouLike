@@ -7,7 +7,7 @@ import com.hmdp.entity.Voucher;
 /**
  * @author tankaiwen
  */
-public interface IVoucherDAO extends IService<Voucher> {
+public interface VoucherDAO extends IService<Voucher> {
 
     Result queryVoucherOfShop(Long shopId);
 

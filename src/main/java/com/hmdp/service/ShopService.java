@@ -1,15 +1,20 @@
 package com.hmdp.service;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.hmdp.DO.ShopQueryDO;
+import com.hmdp.aop.annotation.RedisLock;
 import com.hmdp.constants.RedisConstants;
-import com.hmdp.dao.IShopDAO;
-import com.hmdp.dao.IShopTypeDAO;
+import com.hmdp.dao.ShopDAO;
+import com.hmdp.dao.ShopTypeDAO;
 import com.hmdp.dto.ShopDTO;
 import com.hmdp.dto.ShopTypeDTO;
 import com.hmdp.entity.Shop;
 import com.hmdp.exception.BusinessException;
 import com.hmdp.exception.SystemException;
+import com.hmdp.utils.RedisData;
+import com.hmdp.utils.RedisService;
+import com.hmdp.utils.ThreadPoolHolder;
 import com.hmdp.utils.ValidateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -34,9 +40,11 @@ public class ShopService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     @Resource
-    private IShopDAO shopDAO;
+    private ShopDAO shopDAO;
     @Resource
-    private IShopTypeDAO shopTypeDAO;
+    private ShopTypeDAO shopTypeDAO;
+    @Resource
+    private RedisService redisService;
 
     public ShopDTO queryShopById(Long id) {
         // 1. validate query param
@@ -44,8 +52,28 @@ public class ShopService {
 
         // 2. query shop list from redis
         String redisKey = RedisConstants.CACHE_SHOP_KEY + id;
-        String shopJson = stringRedisTemplate.opsForValue().get(redisKey);
+        RedisData redisData = redisService.getData(redisKey);
+        if (Objects.isNull(redisData)) {
+            // 3. If not exist, return
+            return null;
+        }
 
+        // 4. If existed, convert to shop info and expire time
+        ShopDTO shopDTO = ((JSONObject) redisData.getData()).toJavaObject(ShopDTO.class);
+        LocalDateTime expireTime = redisData.getExpireTime();
+
+        if (LocalDateTime.now().isBefore(expireTime)) {
+            // 5. if not expired, return
+            return shopDTO;
+        }
+
+        // 6. if expired, refresh shop info in redis
+        refreshShopInfoInRedis(id, RedisConstants.CACHE_SHOP_TTL);
+
+        // 7. return expired shop info
+        return shopDTO;
+
+        /* TTL strategy
         // 3. judge whether shop info exits in redis, if yes then return
         if (StringUtils.isNotEmpty(shopJson)) {
             return JSON.parseObject(shopJson, ShopDTO.class);
@@ -62,9 +90,10 @@ public class ShopService {
                 .map(ShopDTO::convertFromShop)
                 .toList();
 
-        // 6. if shop info doesn't exist in data base, set empty string in redis
+        // 6. if shop info doesn't exist in database, set empty string in redis, avoid cache avalanche by setting redis ttl with random number
         if (CollectionUtils.isEmpty(dbShopDTOList)) {
-            stringRedisTemplate.opsForValue().set(redisKey, "", RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+            stringRedisTemplate.opsForValue().set(redisKey, "",
+                    RedisConstants.CACHE_NULL_TTL + RandomUtil.randomLong(0, 10), TimeUnit.MINUTES);
             throw new BusinessException("shop not exist");
         }
 
@@ -72,7 +101,20 @@ public class ShopService {
         stringRedisTemplate.opsForValue().set(redisKey, JSON.toJSONString(dbShopDTOList.get(0)), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
 
         // 8. return shop info
-        return dbShopDTOList.get(0);
+        return dbShopDTOList.get(0);*/
+    }
+
+    @RedisLock(key = RedisConstants.LOCK_SHOP_KEY, timeout = RedisConstants.LOCK_SHOP_TTL, unit = TimeUnit.SECONDS)
+    public void refreshShopInfoInRedis(Long id, Long expireSec) {
+        ThreadPoolHolder.CACHE_REFRESH_EXECUTOR.submit(() -> {
+            ShopDTO shopDTO = ListUtils.emptyIfNull(shopDAO.queryShop(new ShopQueryDO().setId(id)))
+                    .stream()
+                    .map(ShopDTO::convertFromShop)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            redisService.saveDataWithExpire(RedisConstants.CACHE_SHOP_KEY + id, shopDTO, expireSec);
+        });
     }
 
     public List<ShopTypeDTO> listShopTypes() {

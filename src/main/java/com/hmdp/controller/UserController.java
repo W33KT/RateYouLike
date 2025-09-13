@@ -5,7 +5,7 @@ import com.hmdp.vo.request.LoginFormReqVO;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.UserInfo;
 import com.hmdp.facade.UserFacade;
-import com.hmdp.dao.IUserInfoDAO;
+import com.hmdp.dao.UserInfoDAO;
 import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +29,7 @@ public class UserController {
     @Resource
     private UserFacade userFacade;
     @Resource
-    private IUserInfoDAO userInfoService;
+    private UserInfoDAO userInfoDAO;
 
     /**
      * send phone number verification code
@@ -65,7 +65,7 @@ public class UserController {
     @GetMapping("/info/{id}")
     public Result info(@PathVariable("id") Long userId){
         // 查询详情
-        UserInfo info = userInfoService.getById(userId);
+        UserInfo info = userInfoDAO.getById(userId);
         if (info == null) {
             // 没有详情，应该是第一次查看详情
             return Result.ok();

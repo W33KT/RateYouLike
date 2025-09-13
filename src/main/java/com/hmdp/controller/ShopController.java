@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.facade.ShopFacade;
-import com.hmdp.dao.IShopDAO;
+import com.hmdp.dao.ShopDAO;
 import com.hmdp.constants.SystemConstants;
 import com.hmdp.vo.request.ShopUpdateReqVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import javax.annotation.Resource;
 public class ShopController {
 
     @Resource
-    public IShopDAO shopService;
+    public ShopDAO shopDAO;
     @Autowired
     private ShopFacade shopFacade;
 
@@ -69,7 +69,7 @@ public class ShopController {
             @RequestParam(value = "current", defaultValue = "1") Integer current
     ) {
         // 根据类型分页查询
-        Page<Shop> page = shopService.query()
+        Page<Shop> page = shopDAO.query()
                 .eq("type_id", typeId)
                 .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
         // 返回数据
@@ -88,7 +88,7 @@ public class ShopController {
             @RequestParam(value = "current", defaultValue = "1") Integer current
     ) {
         // 根据类型分页查询
-        Page<Shop> page = shopService.query()
+        Page<Shop> page = shopDAO.query()
                 .like(StrUtil.isNotBlank(name), "name", name)
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
         // 返回数据

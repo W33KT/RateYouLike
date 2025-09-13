@@ -5,7 +5,7 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import com.hmdp.constants.RedisConstants;
 import com.hmdp.constants.SystemConstants;
-import com.hmdp.dao.IUserDAO;
+import com.hmdp.dao.UserDAO;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.utils.RegexUtils;
@@ -32,7 +32,7 @@ public class UserService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     @Resource
-    private IUserDAO userDAO;
+    private UserDAO userDAO;
 
     public void sendCode(String phone, HttpSession session) {
         // 1. validate param and phone number format

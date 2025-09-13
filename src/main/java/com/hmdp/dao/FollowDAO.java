@@ -1,11 +1,11 @@
 package com.hmdp.dao;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.hmdp.entity.VoucherOrder;
+import com.hmdp.entity.Follow;
 
 /**
  * @author tankaiwen
  */
-public interface IVoucherOrderDAO extends IService<VoucherOrder> {
+public interface FollowDAO extends IService<Follow> {
 
 }

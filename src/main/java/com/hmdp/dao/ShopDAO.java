@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author tankaiwen
  */
-public interface IShopDAO extends IService<Shop> {
+public interface ShopDAO extends IService<Shop> {
     List<Shop> queryShop(ShopQueryDO queryDO);
     void updateShop(ShopDTO shopDTO);
 }

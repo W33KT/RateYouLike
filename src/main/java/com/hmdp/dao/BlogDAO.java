@@ -11,6 +11,6 @@ import com.hmdp.entity.Blog;
  * @author 虎哥
  * @since 2021-12-22
  */
-public interface IBlogDAO extends IService<Blog> {
+public interface BlogDAO extends IService<Blog> {
 
 }

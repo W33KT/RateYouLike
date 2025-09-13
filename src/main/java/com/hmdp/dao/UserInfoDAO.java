@@ -1,11 +1,11 @@
 package com.hmdp.dao;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.hmdp.entity.ShopType;
+import com.hmdp.entity.UserInfo;
 
 /**
  * @author tankaiwen
  */
-public interface IShopTypeDAO extends IService<ShopType> {
+public interface UserInfoDAO extends IService<UserInfo> {
 
 }

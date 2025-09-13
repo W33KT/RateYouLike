@@ -6,6 +6,6 @@ import com.hmdp.entity.User;
 /**
  * @author tankaiwen
  */
-public interface IUserDAO extends IService<User> {
+public interface UserDAO extends IService<User> {
 
 }
