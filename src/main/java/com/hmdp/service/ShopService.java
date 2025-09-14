@@ -1,7 +1,7 @@
 package com.hmdp.service;
 
+import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.hmdp.DO.ShopQueryDO;
 import com.hmdp.aop.annotation.RedisLock;
 import com.hmdp.constants.RedisConstants;
@@ -52,6 +52,7 @@ public class ShopService {
 
         // 2. query shop list from redis
         String redisKey = RedisConstants.CACHE_SHOP_KEY + id;
+        /*// Logic Expiry Strategy
         RedisData redisData = redisService.getData(redisKey);
         if (Objects.isNull(redisData)) {
             // 3. If not exist, return
@@ -71,16 +72,17 @@ public class ShopService {
         refreshShopInfoInRedis(id, RedisConstants.CACHE_SHOP_TTL);
 
         // 7. return expired shop info
-        return shopDTO;
+        return shopDTO;*/
 
-        /* TTL strategy
+        // TTL strategy
         // 3. judge whether shop info exits in redis, if yes then return
+        String shopJson = redisService.get(redisKey);
         if (StringUtils.isNotEmpty(shopJson)) {
             return JSON.parseObject(shopJson, ShopDTO.class);
         }
 
         // 4. if shopJson is empty string, notify client that shop info not exist directly
-        if (StringUtils.equals("", shopJson)) {
+        if (StringUtils.equals(StringUtils.EMPTY, shopJson)) {
             throw new BusinessException("shop not exist");
         }
 
@@ -92,16 +94,23 @@ public class ShopService {
 
         // 6. if shop info doesn't exist in database, set empty string in redis, avoid cache avalanche by setting redis ttl with random number
         if (CollectionUtils.isEmpty(dbShopDTOList)) {
-            stringRedisTemplate.opsForValue().set(redisKey, "",
-                    RedisConstants.CACHE_NULL_TTL + RandomUtil.randomLong(0, 10), TimeUnit.MINUTES);
+            redisService.saveWithExpire(StringUtils.EMPTY, redisKey, RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             throw new BusinessException("shop not exist");
         }
 
         // 7. save shop info to redis
-        stringRedisTemplate.opsForValue().set(redisKey, JSON.toJSONString(dbShopDTOList.get(0)), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+        long expireTime = RedisConstants.CACHE_SHOP_TTL + RandomUtil.randomLong(0, 10);
+        redisService.saveWithExpire(
+                JSON.toJSONString(
+                        new RedisData()
+                                .setData(dbShopDTOList.get(0))
+                                .setExpireTime(LocalDateTime.now().plusMinutes(expireTime))),
+                redisKey,
+                expireTime,
+                TimeUnit.MINUTES);
 
         // 8. return shop info
-        return dbShopDTOList.get(0);*/
+        return dbShopDTOList.get(0);
     }
 
     @RedisLock(key = RedisConstants.LOCK_SHOP_KEY, timeout = RedisConstants.LOCK_SHOP_TTL, unit = TimeUnit.SECONDS)
@@ -113,7 +122,7 @@ public class ShopService {
                     .filter(Objects::nonNull)
                     .findFirst()
                     .orElse(null);
-            redisService.saveDataWithExpire(RedisConstants.CACHE_SHOP_KEY + id, shopDTO, expireSec);
+            redisService.saveWithLogicExpire(RedisConstants.CACHE_SHOP_KEY + id, shopDTO, expireSec);
         });
     }
 

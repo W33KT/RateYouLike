@@ -3,7 +3,7 @@ package com.hmdp.utils;
 import com.alibaba.fastjson2.JSON;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author tankaiwen
  */
-@Service
+@Component
 public class RedisService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -26,7 +26,7 @@ public class RedisService {
         stringRedisTemplate.delete(key);
     }
 
-    public void saveDataWithExpire(String key, Object value, Long expireSec) {
+    public void saveWithLogicExpire(String key, Object value, Long expireSec) {
         RedisData redisData = new RedisData()
                 .setData(value)
                 .setExpireTime(LocalDateTime.now().plusSeconds(expireSec));
@@ -38,5 +38,13 @@ public class RedisService {
         String json = stringRedisTemplate.opsForValue().get(key);
 
         return JSON.parseObject(json, RedisData.class);
+    }
+
+    public void saveWithExpire(String json, String redisKey, Long expire, TimeUnit timeUnit) {
+        stringRedisTemplate.opsForValue().set(redisKey, json, expire, timeUnit);
+    }
+
+    public String get(String key) {
+        return stringRedisTemplate.opsForValue().get(key);
     }
 }
