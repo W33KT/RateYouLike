@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class IdGenerateService {
 
     @Resource
-    private StringRedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     private static final DateTimeFormatter YYYY_MM_DD = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final int BIT_COUNT = 32;
@@ -34,14 +34,14 @@ public class IdGenerateService {
         String redisKey = bizKey + ":" + date;
 
         // Increment counter atomically
-        Long seq = redisTemplate.opsForValue().increment(redisKey);
+        Long seq = stringRedisTemplate.opsForValue().increment(redisKey);
         if (Objects.isNull( seq)) {
             throw new SystemException("generate id error!");
         }
 
         // Set expiration if key is new
         if (GlobalConstants.ONE_LONG.equals( seq)) {
-            redisTemplate.expire(redisKey, RedisConstants.GLOBAL_KEY_EXPIRE_DAYS, TimeUnit.DAYS);
+            stringRedisTemplate.expire(redisKey, RedisConstants.GLOBAL_KEY_EXPIRE_DAYS, TimeUnit.DAYS);
         }
 
         // Generate ID
