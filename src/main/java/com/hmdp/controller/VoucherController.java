@@ -1,9 +1,11 @@
 package com.hmdp.controller;
 
 
-import com.hmdp.dto.Result;
-import com.hmdp.entity.Voucher;
 import com.hmdp.dao.VoucherDAO;
+import com.hmdp.dto.Result;
+import com.hmdp.facade.VoucherFacade;
+import com.hmdp.vo.request.SeckillVoucherAddReqVO;
+import com.hmdp.vo.request.VoucherAddReqVO;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -22,36 +24,36 @@ public class VoucherController {
 
     @Resource
     private VoucherDAO voucherDAO;
+    @Resource
+    private VoucherFacade voucherFacade;
 
     /**
-     * 新增普通券
-     * @param voucher 优惠券信息
-     * @return 优惠券id
+     * add voucher
+     * @param reqVO voucher info
+     * @return voucher id
      */
     @PostMapping
-    public Result addVoucher(@RequestBody Voucher voucher) {
-        voucherDAO.save(voucher);
-        return Result.ok(voucher.getId());
+    public Result addVoucher(@RequestBody VoucherAddReqVO reqVO) {
+        return voucherFacade.addVoucher(reqVO);
     }
 
     /**
-     * 新增秒杀券
-     * @param voucher 优惠券信息，包含秒杀信息
-     * @return 优惠券id
+     * add flash-sell voucher
+     * @param reqVO voucher info and flash-sell info
+     * @return voucher id
      */
     @PostMapping("seckill")
-    public Result addSeckillVoucher(@RequestBody Voucher voucher) {
-        voucherDAO.addSeckillVoucher(voucher);
-        return Result.ok(voucher.getId());
+    public Result addSeckillVoucher(@RequestBody SeckillVoucherAddReqVO reqVO) {
+        return voucherFacade.addSeckillVoucher(reqVO);
     }
 
     /**
-     * 查询店铺的优惠券列表
-     * @param shopId 店铺id
-     * @return 优惠券列表
+     * query voucher list of a shop
+     * @param shopId shop id
+     * @return voucher info list
      */
     @GetMapping("/list/{shopId}")
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
-       return voucherDAO.queryVoucherOfShop(shopId);
+       return voucherFacade.queryVoucherOfShop(shopId);
     }
 }
