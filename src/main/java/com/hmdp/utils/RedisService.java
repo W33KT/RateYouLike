@@ -1,7 +1,6 @@
 package com.hmdp.utils;
 
 import com.alibaba.fastjson2.JSON;
-import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -16,15 +15,6 @@ import java.util.concurrent.TimeUnit;
 public class RedisService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-
-    public boolean tryLock(String key, Long expireTime, TimeUnit unit) {
-        Boolean res = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", expireTime, unit);
-        return BooleanUtils.isTrue(res);
-    }
-
-    public void unlock(String key) {
-        stringRedisTemplate.delete(key);
-    }
 
     public void saveWithLogicExpire(String key, Object value, Long expireSec) {
         RedisData redisData = new RedisData()

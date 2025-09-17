@@ -7,11 +7,11 @@ import com.hmdp.dto.SeckillVoucherDTO;
 import com.hmdp.dto.VoucherDTO;
 import com.hmdp.entity.Voucher;
 import com.hmdp.exception.SystemException;
+import com.hmdp.service.transaction.VoucherTransactionService;
 import com.hmdp.utils.ValidateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
@@ -25,6 +25,9 @@ public class VoucherService {
     private SeckillVoucherDAO seckillVoucherDAO;
     @Resource
     private VoucherDAO voucherDAO;
+    @Resource
+    private VoucherTransactionService voucherTransactionService;
+
 
     /**
      * add normal voucher
@@ -63,30 +66,10 @@ public class VoucherService {
     public Long addSeckillVoucher(SeckillVoucherDTO seckillVoucherDTO, VoucherDTO voucherDTO) {
         Long res;
         try {
-            res = addSeckillVoucherTransaction(seckillVoucherDTO, voucherDTO);
-        } catch (Exception e) {;
+            res = voucherTransactionService.addSeckillVoucherTransaction(seckillVoucherDTO, voucherDTO);
+        } catch (Exception e) {
             throw new SystemException("Add flash-sell voucher failed, please refresh to check!", e);
         }
         return res;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public Long addSeckillVoucherTransaction(SeckillVoucherDTO seckillVoucherDTO, VoucherDTO voucherDTO) {
-        validateVoucherInsertParams(voucherDTO);
-        ValidateUtils.isTrue(VoucherTypeEnum.SECKILL.getCode().equals(voucherDTO.getType()), "only flash-sell voucher supported!");
-        validateSeckillVoucherInsertParams(seckillVoucherDTO);
-
-        Voucher voucher = voucherDTO.convertToDB();
-        voucherDAO.save(voucher);
-
-        seckillVoucherDTO.setVoucherId(voucher.getId());
-        seckillVoucherDAO.save(seckillVoucherDTO.convertToDB());
-
-        return voucher.getId();
-    }
-
-    private void validateSeckillVoucherInsertParams(SeckillVoucherDTO seckillVoucherDTO) {
-        ValidateUtils.notNull(seckillVoucherDTO, "flash-sell voucher info is null");
-        ValidateUtils.notNull(seckillVoucherDTO.getStock(), "seckill voucher stock is null");
     }
 }

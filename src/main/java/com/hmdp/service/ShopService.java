@@ -113,7 +113,11 @@ public class ShopService {
         return dbShopDTOList.get(0);
     }
 
-    @RedisLock(key = RedisConstants.LOCK_SHOP_KEY, timeout = RedisConstants.LOCK_SHOP_TTL, unit = TimeUnit.SECONDS)
+    @RedisLock(
+            key = RedisConstants.LOCK_SHOP_KEY + " + #id",
+            timeout = RedisConstants.LOCK_SHOP_TTL,
+            unit = TimeUnit.SECONDS
+    )
     public void refreshShopInfoInRedis(Long id, Long expireSec) {
         ThreadPoolHolder.CACHE_REFRESH_EXECUTOR.submit(() -> {
             ShopDTO shopDTO = ListUtils.emptyIfNull(shopDAO.queryShop(new ShopQueryDO().setId(id)))

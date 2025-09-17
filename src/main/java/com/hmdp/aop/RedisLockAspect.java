@@ -2,7 +2,7 @@ package com.hmdp.aop;
 
 import com.hmdp.aop.annotation.RedisLock;
 import com.hmdp.exception.SystemException;
-import com.hmdp.utils.RedisService;
+import com.hmdp.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -17,13 +17,16 @@ import org.springframework.stereotype.Component;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * @author tankaiwen
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class RedisLockAspect {
 
-    private final RedisService redisService;
+    private final RedisLockService redisLockService;
     private final SpelExpressionParser parser = new SpelExpressionParser();
     private final StandardEvaluationContext context = new StandardEvaluationContext();
 
@@ -31,9 +34,9 @@ public class RedisLockAspect {
     public Object around(ProceedingJoinPoint joinPoint, RedisLock redisLock) throws Throwable {
         String key = parseKey(redisLock.key(), joinPoint);
         try {
-            boolean locked = redisService.tryLock(key, redisLock.timeout(), redisLock.unit());
+            boolean locked = redisLockService.tryLock(key, redisLock.timeout(), redisLock.unit());
             if (!locked) {
-                throw new SystemException("failed to get redis lock: " + key);
+                throw new SystemException("Duplicate operation: " + key + "please try again later!");
             }
 
             return joinPoint.proceed();
@@ -41,7 +44,7 @@ public class RedisLockAspect {
             log.error("redis lock error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
         } finally {
-            redisService.unlock(key);
+            redisLockService.unlock(key);
         }
     }
 
