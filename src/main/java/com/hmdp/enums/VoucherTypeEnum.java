@@ -1,4 +1,4 @@
-package com.hmdp;
+package com.hmdp.enums;
 
 /**
  * @author tankaiwen

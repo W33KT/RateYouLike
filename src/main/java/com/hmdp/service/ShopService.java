@@ -94,13 +94,13 @@ public class ShopService {
 
         // 6. if shop info doesn't exist in database, set empty string in redis, avoid cache avalanche by setting redis ttl with random number
         if (CollectionUtils.isEmpty(dbShopDTOList)) {
-            redisService.saveWithExpire(StringUtils.EMPTY, redisKey, RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
+            redisService.save(StringUtils.EMPTY, redisKey, RedisConstants.CACHE_NULL_TTL, TimeUnit.MINUTES);
             throw new BusinessException("shop not exist");
         }
 
         // 7. save shop info to redis
         long expireTime = RedisConstants.CACHE_SHOP_TTL + RandomUtil.randomLong(0, 10);
-        redisService.saveWithExpire(
+        redisService.save(
                 JSON.toJSONString(
                         new RedisData()
                                 .setData(dbShopDTOList.get(0))

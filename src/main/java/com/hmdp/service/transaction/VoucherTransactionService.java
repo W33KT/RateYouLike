@@ -1,11 +1,13 @@
 package com.hmdp.service.transaction;
 
-import com.hmdp.VoucherTypeEnum;
+import com.hmdp.enums.VoucherTypeEnum;
+import com.hmdp.constants.RedisConstants;
 import com.hmdp.dao.SeckillVoucherDAO;
 import com.hmdp.dao.VoucherDAO;
 import com.hmdp.dto.SeckillVoucherDTO;
 import com.hmdp.dto.VoucherDTO;
 import com.hmdp.entity.Voucher;
+import com.hmdp.utils.RedisService;
 import com.hmdp.utils.ValidateUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,8 @@ public class VoucherTransactionService {
     private SeckillVoucherDAO seckillVoucherDAO;
     @Resource
     private VoucherDAO voucherDAO;
+    @Resource
+    private RedisService redisService;
 
     @Transactional(rollbackFor = Exception.class)
     public Long addSeckillVoucherTransaction(SeckillVoucherDTO seckillVoucherDTO, VoucherDTO voucherDTO) {
@@ -33,6 +37,9 @@ public class VoucherTransactionService {
 
         seckillVoucherDTO.setVoucherId(voucher.getId());
         seckillVoucherDAO.save(seckillVoucherDTO.convertToDB());
+
+        // save flash-sell voucher info to redis
+        redisService.save(RedisConstants.SECKILL_STOCK_KEY + voucher.getId(), String.valueOf(voucher.getStock()), null, null);
 
         return voucher.getId();
     }

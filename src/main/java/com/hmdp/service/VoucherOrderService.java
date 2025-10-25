@@ -1,20 +1,24 @@
 package com.hmdp.service;
 
+import com.alibaba.fastjson2.JSON;
 import com.hmdp.aop.annotation.RedisLock;
-import com.hmdp.constants.GlobalConstants;
+import com.hmdp.constants.LuaConstants;
 import com.hmdp.constants.RedisConstants;
 import com.hmdp.dao.SeckillVoucherDAO;
 import com.hmdp.dao.VoucherOrderDAO;
-import com.hmdp.entity.SeckillVoucher;
+import com.hmdp.dto.message.FlashSellVoucherOrderMessage;
+import com.hmdp.enums.FlashSellLuaRespEnum;
 import com.hmdp.exception.BusinessException;
 import com.hmdp.service.transaction.VoucherOrderTransactionService;
+import com.hmdp.utils.IdGenerateService;
 import com.hmdp.utils.UserHolder;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
-import java.util.Objects;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,6 +32,12 @@ public class VoucherOrderService {
     private SeckillVoucherDAO seckillVoucherDAO;
     @Resource
     private VoucherOrderTransactionService voucherOrderTransactionService;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private KafkaTemplate<String, String> kafkaTemplate;
+    @Resource
+    private IdGenerateService idGenerateService;
 
     /**
      * claim flash-sell voucher (each user can only claim one voucher)
@@ -37,44 +47,23 @@ public class VoucherOrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public Long seckillVoucher(Long voucherId) {
-        // 1. query flash-sell voucher info
-        SeckillVoucher seckillVoucher = seckillVoucherDAO.getById(voucherId);
-        if (Objects.isNull(seckillVoucher)) {
-            // flash-sell voucher does not exist
-            throw new BusinessException("This flash-sell voucher does not exist!");
-        }
-
-        // 2. judge flash-sell voucher sale has started
-        if (Objects.nonNull(seckillVoucher.getBeginTime()) && seckillVoucher.getBeginTime().isAfter(LocalDateTime.now())) {
-            // flash-sell voucher sale has not started
-            throw new BusinessException("This flash-sell voucher has not been available for sale!");
-        }
-
-        // 3. judge flash-sell voucher sale has ended
-        if (Objects.nonNull(seckillVoucher.getEndTime()) && seckillVoucher.getEndTime().isBefore(LocalDateTime.now())) {
-            // flash-sell voucher sale has ended
-            throw new BusinessException("This flash-sell voucher sale has ended!");
-        }
-
-        // 4. judge flash-sell voucher stock
-        if (Objects.nonNull(seckillVoucher.getStock()) && GlobalConstants.ONE_INTEGER.compareTo(seckillVoucher.getStock()) > 0) {
-            // flash-sell voucher stock is not enough
-            throw new BusinessException("This flash-sell voucher stock is not enough!");
-        }
-
-        // 5. judge user has claimed flash-sell voucher
         Long userId = UserHolder.getUser().getId();
-        Long count = voucherOrderDAO.query()
-                .eq("user_id", userId)
-                .eq("voucher_id", voucherId)
-                .count();
-        if (Objects.nonNull(count) && GlobalConstants.ONE_LONG.compareTo(count) <= 0) {
-            // user has claimed flash-sell voucher
-            throw new BusinessException("You have claimed this flash-sell voucher!");
+
+        Long execute = stringRedisTemplate.execute(LuaConstants.FLASH_SELL_SCRIPT,
+                Collections.emptyList(), voucherId.toString(), userId.toString());
+        if (FlashSellLuaRespEnum.SUCCESS != FlashSellLuaRespEnum.getByCode(execute.intValue())) {
+            throw new BusinessException(FlashSellLuaRespEnum.getByCode(execute.intValue()).getDesc());
         }
 
-        // 6. create flash-sell voucher order
-        return createVoucherOrder(voucherId, userId);
+        Long orderId = idGenerateService.generateId(RedisConstants.ORDER_ID_GENERATE_KEY);
+
+        FlashSellVoucherOrderMessage message = new FlashSellVoucherOrderMessage()
+                .setUserId(userId)
+                .setVoucherId(voucherId)
+                .setOrderId(orderId);
+        kafkaTemplate.send("seckill_order", JSON.toJSONString(message));
+
+        return orderId;
     }
 
     @RedisLock(
@@ -82,7 +71,7 @@ public class VoucherOrderService {
             timeout = RedisConstants.LOCK_ORDER_TTL,
             unit = TimeUnit.SECONDS
     )
-    public Long createVoucherOrder(Long voucherId, Long userId) {
-        return voucherOrderTransactionService.createVoucherOrder(voucherId, userId);
+    public void createVoucherOrder(Long voucherId, Long userId, Long orderId) {
+        voucherOrderTransactionService.createVoucherOrder(voucherId, userId, orderId);
     }
 }

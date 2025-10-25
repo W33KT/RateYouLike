@@ -1,11 +1,9 @@
 package com.hmdp.service.transaction;
 
-import com.hmdp.constants.RedisConstants;
 import com.hmdp.dao.SeckillVoucherDAO;
 import com.hmdp.dao.VoucherOrderDAO;
 import com.hmdp.entity.VoucherOrder;
 import com.hmdp.exception.BusinessException;
-import com.hmdp.utils.IdGenerateService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,11 +18,9 @@ public class VoucherOrderTransactionService {
     private VoucherOrderDAO voucherOrderDAO;
     @Resource
     private SeckillVoucherDAO seckillVoucherDAO;
-    @Resource
-    private IdGenerateService idGenerateService;
 
     @Transactional(rollbackFor = Exception.class)
-    public Long createVoucherOrder(Long voucherId, Long userId) {
+    public void createVoucherOrder(Long voucherId, Long userId, Long orderId) {
         // 1. decrease flash-sell voucher stock
         boolean success = seckillVoucherDAO.update()
                 .setSql("stock = stock - 1")
@@ -38,12 +34,9 @@ public class VoucherOrderTransactionService {
 
         // 2. create flash-sell voucher order
         VoucherOrder voucherOrder = new VoucherOrder()
-                .setId(idGenerateService.generateId(RedisConstants.ORDER_ID_GENERATE_KEY))
+                .setId(orderId)
                 .setUserId(userId)
                 .setVoucherId(voucherId);
         voucherOrderDAO.save(voucherOrder);
-
-        // 3. return flash-sell voucher order id
-        return voucherOrder.getId();
     }
 }

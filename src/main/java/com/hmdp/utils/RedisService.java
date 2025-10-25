@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,8 +31,12 @@ public class RedisService {
         return JSON.parseObject(json, RedisData.class);
     }
 
-    public void saveWithExpire(String json, String redisKey, Long expire, TimeUnit timeUnit) {
-        stringRedisTemplate.opsForValue().set(redisKey, json, expire, timeUnit);
+    public void save(String json, String redisKey, Long expire, TimeUnit timeUnit) {
+        if (Objects.nonNull(expire) && Objects.nonNull(timeUnit)) {
+            stringRedisTemplate.opsForValue().set(redisKey, json, expire, timeUnit);
+            return;
+        }
+        stringRedisTemplate.opsForValue().set(redisKey, json);
     }
 
     public String get(String key) {

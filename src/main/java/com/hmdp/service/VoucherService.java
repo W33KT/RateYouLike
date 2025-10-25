@@ -1,6 +1,6 @@
 package com.hmdp.service;
 
-import com.hmdp.VoucherTypeEnum;
+import com.hmdp.enums.VoucherTypeEnum;
 import com.hmdp.dao.SeckillVoucherDAO;
 import com.hmdp.dao.VoucherDAO;
 import com.hmdp.dto.SeckillVoucherDTO;
