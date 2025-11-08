@@ -2,13 +2,13 @@ package com.hmdp.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hmdp.constants.SystemConstants;
+import com.hmdp.dao.BlogDAO;
+import com.hmdp.dao.UserDAO;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
-import com.hmdp.entity.User;
-import com.hmdp.dao.BlogDAO;
-import com.hmdp.dao.UserDAO;
-import com.hmdp.constants.SystemConstants;
+import com.hmdp.facade.BlogFacade;
 import com.hmdp.utils.UserHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +26,8 @@ public class BlogController {
     private BlogDAO blogDAO;
     @Resource
     private UserDAO userDAO;
+    @Resource
+    private BlogFacade blogFacade;
 
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog) {
@@ -60,19 +62,11 @@ public class BlogController {
 
     @GetMapping("/hot")
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
-        // 根据用户查询
-        Page<Blog> page = blogDAO.query()
-                .orderByDesc("liked")
-                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 获取当前页数据
-        List<Blog> records = page.getRecords();
-        // 查询用户
-        records.forEach(blog ->{
-            Long userId = blog.getUserId();
-            User user = userDAO.getById(userId);
-            blog.setName(user.getNickName());
-            blog.setIcon(user.getIcon());
-        });
-        return Result.ok(records);
+        return blogFacade.queryHotBlog( current);
+    }
+
+    @GetMapping("/{id}")
+    public Result queryBlogById(@PathVariable("id") Long id) {
+        return blogFacade.queryBlogById(id);
     }
 }
