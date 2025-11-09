@@ -20,4 +20,9 @@ public class BlogFacade {
     public Result queryBlogById(Long id) {
         return Result.ok(blogService.queryBlogById(id));
     }
+
+    public Result likeBlog(Long id) {
+        blogService.likeBlog(id);
+        return Result.ok();
+    }
 }

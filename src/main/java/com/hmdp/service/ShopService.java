@@ -12,7 +12,6 @@ import com.hmdp.dto.ShopTypeDTO;
 import com.hmdp.entity.Shop;
 import com.hmdp.exception.BusinessException;
 import com.hmdp.exception.SystemException;
-import com.hmdp.utils.RedisData;
 import com.hmdp.utils.RedisService;
 import com.hmdp.utils.ThreadPoolHolder;
 import com.hmdp.utils.ValidateUtils;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -101,10 +99,7 @@ public class ShopService {
         // 7. save shop info to redis
         long expireTime = RedisConstants.CACHE_SHOP_TTL + RandomUtil.randomLong(0, 10);
         redisService.save(
-                JSON.toJSONString(
-                        new RedisData()
-                                .setData(dbShopDTOList.get(0))
-                                .setExpireTime(LocalDateTime.now().plusMinutes(expireTime))),
+                JSON.toJSONString(dbShopDTOList.get(0)),
                 redisKey,
                 expireTime,
                 TimeUnit.MINUTES);

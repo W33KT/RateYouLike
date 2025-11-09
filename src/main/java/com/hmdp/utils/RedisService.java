@@ -42,4 +42,16 @@ public class RedisService {
     public String get(String key) {
         return stringRedisTemplate.opsForValue().get(key);
     }
+
+    public Boolean existInSet( String key, String value) {
+        return stringRedisTemplate.opsForSet().isMember(key, value);
+    }
+
+    public void addToSet(String key, String value) {
+        stringRedisTemplate.opsForSet().add(key, value);
+    }
+
+    public void removeFromSet(String key, String value) {
+        stringRedisTemplate.opsForSet().remove(key, value);
+    }
 }
