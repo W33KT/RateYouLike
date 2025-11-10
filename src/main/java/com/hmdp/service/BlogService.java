@@ -5,18 +5,24 @@ import com.hmdp.constants.RedisConstants;
 import com.hmdp.constants.SystemConstants;
 import com.hmdp.dao.BlogDAO;
 import com.hmdp.dao.UserDAO;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.entity.User;
 import com.hmdp.exception.BusinessException;
 import com.hmdp.utils.RedisService;
 import com.hmdp.utils.UserHolder;
 import com.hmdp.utils.ValidateUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author tankaiwen
@@ -67,7 +73,15 @@ public class BlogService {
         }
         blog.setName(user.getNickName());
         blog.setIcon(user.getIcon());
-        Boolean isLike = redisService.existInSet(RedisConstants.BLOG_LIKED_KEY + blog.getId(), blog.getUserId().toString());
+
+        UserDTO currentUserDTO = UserHolder.getUser();
+        if (Objects.isNull(currentUserDTO)) {
+            return;
+        }
+        Boolean isLike = redisService.existInSortedSet(
+                RedisConstants.BLOG_LIKED_KEY + blog.getId(),
+                String.valueOf(currentUserDTO.getId()));
+
         blog.setIsLike(BooleanUtils.isTrue(isLike));
     }
 
@@ -76,13 +90,13 @@ public class BlogService {
         String key = RedisConstants.BLOG_LIKED_KEY + id;
         Long userId = UserHolder.getUser().getId();
 
-        if (redisService.existInSet(key, userId.toString())) {
+        if (redisService.existInSortedSet(key, userId.toString())) {
             boolean lines = blogDAO.update()
                     .setSql("liked = liked - 1")
                     .eq("id", id)
                     .update();
             if (lines) {
-                redisService.removeFromSet(key, userId.toString());
+                redisService.removeFromSortedSet(key, userId.toString());
             }
             return;
         }
@@ -92,7 +106,28 @@ public class BlogService {
                 .eq("id", id)
                 .update();
         if (lines) {
-            redisService.addToSet(key, userId.toString());
+            redisService.addToSortedSet(key, userId.toString(), System.currentTimeMillis());
         }
+    }
+
+    public List<UserDTO> queryBlogLikes(Long id) {
+        String key = RedisConstants.BLOG_LIKED_KEY + id;
+
+        Set<String> top5LikeUsers = redisService.queryFromSortedSet(key, 0, 4);
+        if (Objects.isNull(top5LikeUsers) || CollectionUtils.isEmpty(top5LikeUsers)) {
+            return Collections.emptyList();
+        }
+
+        List<Long> userIds = top5LikeUsers.stream().map(Long::valueOf).toList();
+        String ids = StringUtils.join(",", userIds);
+
+        List<User> users = userDAO.query()
+                .in("id", userIds)
+                .last("order by field(id," +ids + ")")
+                .list();
+
+        return ListUtils.emptyIfNull(users).stream()
+                .map(UserDTO::convertFromUser)
+                .toList();
     }
 }

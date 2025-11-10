@@ -66,4 +66,9 @@ public class BlogController {
     public Result queryBlogById(@PathVariable("id") Long id) {
         return blogFacade.queryBlogById(id);
     }
+
+    @PutMapping("/likes/{id}")
+    public Result queryBlogLikes(@PathVariable("id") Long id) {
+        return blogFacade.likeBlog(id);
+    }
 }

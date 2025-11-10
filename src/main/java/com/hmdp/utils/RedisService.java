@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,5 +54,21 @@ public class RedisService {
 
     public void removeFromSet(String key, String value) {
         stringRedisTemplate.opsForSet().remove(key, value);
+    }
+
+    public Boolean existInSortedSet(String key, String value) {
+        return Objects.nonNull(stringRedisTemplate.opsForZSet().score(key, value));
+    }
+
+    public void addToSortedSet(String key, String value, double score) {
+        stringRedisTemplate.opsForZSet().add(key, value, score);
+    }
+
+    public void removeFromSortedSet(String key, String value) {
+        stringRedisTemplate.opsForZSet().remove(key, value);
+    }
+
+    public Set<String> queryFromSortedSet(String key, long start, long end) {
+        return stringRedisTemplate.opsForZSet().range(key, start, end);
     }
 }
