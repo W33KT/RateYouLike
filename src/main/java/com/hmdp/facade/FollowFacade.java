@@ -21,4 +21,8 @@ public class FollowFacade {
     public Result isFollow(Long toFollowUserId) {
         return Result.ok(followService.isFollow(toFollowUserId));
     }
+
+    public Result common(Long id) {
+        return Result.ok(followService.commonFollowing(id));
+    }
 }

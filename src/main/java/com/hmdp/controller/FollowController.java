@@ -25,4 +25,9 @@ public class FollowController {
     public Result isFollow(@PathVariable("id") Long followUserId) {
         return followFacade.isFollow(followUserId);
     }
+
+    @GetMapping("/common/{id}")
+    public Result common(@PathVariable("id") Long id) {
+        return followFacade.common(id);
+    }
 }
