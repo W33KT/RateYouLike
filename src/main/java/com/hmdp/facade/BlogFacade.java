@@ -1,6 +1,8 @@
 package com.hmdp.facade;
 
 import com.hmdp.dto.Result;
+import com.hmdp.dto.ScrollResult;
+import com.hmdp.entity.Blog;
 import com.hmdp.service.BlogService;
 import org.springframework.stereotype.Service;
 
@@ -28,5 +30,13 @@ public class BlogFacade {
 
     public Result queryBlogLikes(Long id) {
         return Result.ok(blogService.queryBlogLikes(id));
+    }
+
+    public Result saveBlog(Blog blog) {
+        return Result.ok(blogService.saveBlog(blog));
+    }
+
+    public ScrollResult queryBlogOfFollow(Long max, Integer offset) {
+        return blogService.queryBlogOfFollow(max, offset);
     }
 }

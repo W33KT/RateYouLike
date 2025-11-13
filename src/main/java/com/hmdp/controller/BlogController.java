@@ -6,6 +6,7 @@ import com.hmdp.constants.SystemConstants;
 import com.hmdp.dao.BlogDAO;
 import com.hmdp.dao.UserDAO;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.ScrollResult;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.facade.BlogFacade;
@@ -31,13 +32,7 @@ public class BlogController {
 
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog) {
-        // 获取登录用户
-        UserDTO user = UserHolder.getUser();
-        blog.setUserId(user.getId());
-        // 保存探店博文
-        blogDAO.save(blog);
-        // 返回id
-        return Result.ok(blog.getId());
+        return blogFacade.saveBlog(blog);
     }
 
     @PutMapping("/like/{id}")
@@ -69,6 +64,12 @@ public class BlogController {
 
     @PutMapping("/likes/{id}")
     public Result queryBlogLikes(@PathVariable("id") Long id) {
-        return blogFacade.likeBlog(id);
+        return blogFacade.queryBlogLikes(id);
+    }
+
+    @GetMapping("of/follow")
+    public ScrollResult queryBlogOfFollow(@RequestParam("max") Long max,
+                                          @RequestParam(value = "offset", defaultValue = "0") Integer offset) {
+        return blogFacade.queryBlogOfFollow(max, offset);
     }
 }

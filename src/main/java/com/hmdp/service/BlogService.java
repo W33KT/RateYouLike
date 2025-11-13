@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.constants.RedisConstants;
 import com.hmdp.constants.SystemConstants;
 import com.hmdp.dao.BlogDAO;
+import com.hmdp.dao.FollowDAO;
 import com.hmdp.dao.UserDAO;
+import com.hmdp.dto.ScrollResult;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.entity.User;
@@ -16,13 +18,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author tankaiwen
@@ -35,6 +35,8 @@ public class BlogService {
     private UserDAO userDAO;
     @Resource
     private RedisService redisService;
+    @Resource
+    private FollowDAO followDAO;
 
     public List<Blog> queryHotBlog(Integer offset) {
         ValidateUtils.notNull(offset, "offset is null!");
@@ -129,5 +131,64 @@ public class BlogService {
         return ListUtils.emptyIfNull(users).stream()
                 .map(UserDTO::convertFromUser)
                 .toList();
+    }
+
+    public Long saveBlog(Blog blog) {
+        ValidateUtils.notNull(blog, "blog is null!");
+        UserDTO user = UserHolder.getUser();
+        ValidateUtils.notNull(user, "Please log in!");
+        blog.setUserId(user.getId());
+
+        boolean res = blogDAO.save(blog);
+        if (!res) {
+            throw new BusinessException("save blog failed!");
+        }
+
+        List<Long> fansIds = followDAO.queryFansIds(user.getId());
+
+        for (Long fansId : fansIds) {
+            String key = RedisConstants.FEED_KEY + fansId;
+            redisService.addToSortedSet(key, blog.getId().toString(), System.currentTimeMillis());
+        }
+
+        return blog.getId();
+    }
+
+    public ScrollResult queryBlogOfFollow(Long max, Integer offset) {
+        ValidateUtils.notNull(max, "max is null!");
+        ValidateUtils.notNull(offset, "offset is null!");
+        UserDTO user = UserHolder.getUser();
+        ValidateUtils.notNull(user, "Please log in!");
+        String key = RedisConstants.FEED_KEY + user.getId();
+        Set<ZSetOperations.TypedTuple<String>> typedTuples = redisService.pageQueryFromSortedSet(
+                key, 0, max, offset, SystemConstants.FOLLOWING_BLOGS_PAGE_SIZE);
+        if (CollectionUtils.isEmpty(typedTuples)) {
+            return new ScrollResult();
+        }
+        List<Integer> ids = new ArrayList<>(typedTuples.size());
+        long minTime = 0;
+        int offsetCount = 1;
+        for (ZSetOperations.TypedTuple<String> typedTuple : typedTuples) {
+            if (Objects.isNull(typedTuple) || Objects.isNull(typedTuple.getValue()) || Objects.isNull(typedTuple.getScore())) {
+                continue;
+            }
+            ids.add(Integer.valueOf(typedTuple.getValue()));
+            long time = typedTuple.getScore().longValue();
+            if (time == minTime) {
+                offsetCount++;
+            } else {
+                minTime = time;
+                offsetCount = 1;
+            }
+        }
+
+        String idsStr = StringUtils.join(",", ids);
+        List<Blog> blogs = blogDAO.query().in("id", ids).last("order by field(id," + idsStr + ")").list();
+        blogs.forEach(this::fillUserData);
+
+        return new ScrollResult()
+                .setList(blogs)
+                .setMinTime(minTime)
+                .setOffset(offsetCount);
     }
 }

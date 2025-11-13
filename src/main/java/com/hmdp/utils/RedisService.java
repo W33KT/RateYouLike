@@ -2,6 +2,7 @@ package com.hmdp.utils;
 
 import com.alibaba.fastjson2.JSON;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -79,5 +80,9 @@ public class RedisService {
 
     public Set<String> queryFromSortedSet(String key, long start, long end) {
         return stringRedisTemplate.opsForZSet().range(key, start, end);
+    }
+
+    public Set<ZSetOperations.TypedTuple<String>> pageQueryFromSortedSet(String key, double min, double max, long offset, long count) {
+        return stringRedisTemplate.opsForZSet().reverseRangeByScoreWithScores(key, min , max, offset, count);
     }
 }
