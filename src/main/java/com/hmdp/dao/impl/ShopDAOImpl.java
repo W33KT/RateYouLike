@@ -2,8 +2,10 @@ package com.hmdp.dao.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.DO.ShopQueryDO;
+import com.hmdp.constants.SystemConstants;
 import com.hmdp.dao.ShopDAO;
 import com.hmdp.dto.ShopDTO;
 import com.hmdp.entity.Shop;
@@ -96,5 +98,18 @@ public class ShopDAOImpl extends ServiceImpl<ShopMapper, Shop> implements ShopDA
         if ( !result) {
             throw new SystemException("Update shop info failed, please refresh this web page and retry!");
         }
+    }
+
+    @Override
+    public List<ShopDTO> pageQueryShopByType(Integer typeId, Integer current, Integer size) {
+        ValidateUtils.notNull(typeId, "typeId is null");
+        ValidateUtils.notNull(current, "current is null");
+        size = Objects.isNull(size) ? SystemConstants.DEFAULT_PAGE_SIZE : size;
+
+        Page<Shop> page = query()
+                .eq("type_id", typeId)
+                .page(new Page<>(current, size));
+
+        return page.getRecords().stream().map(ShopDTO::convertFromShop).toList();
     }
 }

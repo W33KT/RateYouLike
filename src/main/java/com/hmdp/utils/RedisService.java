@@ -1,15 +1,19 @@
 package com.hmdp.utils;
 
 import com.alibaba.fastjson2.JSON;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.redis.connection.RedisCommands;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.domain.geo.GeoReference;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -84,5 +88,23 @@ public class RedisService {
 
     public Set<ZSetOperations.TypedTuple<String>> pageQueryFromSortedSet(String key, double min, double max, long offset, long count) {
         return stringRedisTemplate.opsForZSet().reverseRangeByScoreWithScores(key, min , max, offset, count);
+    }
+
+    public void batchAddGeo(String key, List<RedisCommands.GeoLocation<String>> geoLocations) {
+        stringRedisTemplate.opsForGeo().add(key, geoLocations);
+    }
+
+    public List<GeoResult<RedisGeoCommands.GeoLocation<String>>> queryGeo(String key, Double x, Double y, Double distance, int start, int end) {
+        GeoResults<RedisGeoCommands.GeoLocation<String>> result = stringRedisTemplate.opsForGeo()
+                .search( // default: sorted by distance
+                        key,
+                        GeoReference.fromCoordinate(x, y),
+                        new Distance(distance),
+                        RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end));
+        if (Objects.isNull(result)) {
+            return Collections.emptyList();
+        }
+
+        return result.getContent().stream().skip( start).toList();
     }
 }

@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.hmdp.DO.ShopQueryDO;
 import com.hmdp.aop.annotation.RedisLock;
 import com.hmdp.constants.RedisConstants;
+import com.hmdp.constants.SystemConstants;
 import com.hmdp.dao.ShopDAO;
 import com.hmdp.dao.ShopTypeDAO;
 import com.hmdp.dto.ShopDTO;
@@ -20,13 +21,15 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -201,5 +204,43 @@ public class ShopService {
 
         // 3. delete old shop info in Redis
         stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_KEY + shopDTO.getId());
+    }
+
+    public List<ShopDTO> pageQueryShopByType(Integer typeId, Integer current, Double x, Double y) {
+        if (Objects.isNull(x) || Objects.isNull(y)) {
+            return shopDAO.pageQueryShopByType(typeId, current, SystemConstants.DEFAULT_PAGE_SIZE);
+        }
+
+        int begin = (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE;
+        int end = current * SystemConstants.DEFAULT_PAGE_SIZE;
+        String key = RedisConstants.SHOP_GEO_KEY + typeId;
+
+        List<GeoResult<RedisGeoCommands.GeoLocation<String>>> list = redisService.queryGeo(key, x, y, 5000.0, begin, end);
+        if (CollectionUtils.isEmpty(list)) {
+            return Collections.emptyList();
+        }
+
+        List<Long> shopIdList = new ArrayList<>();
+        Map<Long, Distance> distanceMap = new HashMap<>();
+        list.forEach(res -> {
+            String shopIdStr = res.getContent().getName();
+            Long shopId = Long.valueOf(shopIdStr);
+            shopIdList.add(shopId);
+            Distance distance = res.getDistance();
+            distanceMap.put(shopId, distance);
+        });
+
+        List<Shop> shops = shopDAO.query()
+                .in("id", shopIdList)
+                .last("ORDER BY FIELD(id," + StringUtils.join(shopIdList, ",") + ")")
+                .list();
+
+        return ListUtils.emptyIfNull(shops)
+                .stream()
+                .map(ShopDTO::convertFromShop)
+                .filter(Objects::nonNull)
+                .peek(shopDTO -> shopDTO.setDistance(distanceMap.get(shopDTO.getId()).getValue()))
+                .sorted(Comparator.comparing(ShopDTO::getDistance))
+                .toList();
     }
 }

@@ -3,13 +3,12 @@ package com.hmdp.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hmdp.constants.SystemConstants;
+import com.hmdp.dao.ShopDAO;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.facade.ShopFacade;
-import com.hmdp.dao.ShopDAO;
-import com.hmdp.constants.SystemConstants;
 import com.hmdp.vo.request.ShopUpdateReqVO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -24,7 +23,7 @@ public class ShopController {
 
     @Resource
     public ShopDAO shopDAO;
-    @Autowired
+    @Resource
     private ShopFacade shopFacade;
 
     /**
@@ -58,22 +57,20 @@ public class ShopController {
     }
 
     /**
-     * 根据商铺类型分页查询商铺信息
-     * @param typeId 商铺类型
-     * @param current 页码
-     * @return 商铺列表
+     * query shop info by type
+     * @param typeId shop type id
+     * @param current page number
+     * @param x longitude
+     * @param y latitude
      */
     @GetMapping("/of/type")
     public Result queryShopByType(
             @RequestParam("typeId") Integer typeId,
-            @RequestParam(value = "current", defaultValue = "1") Integer current
+            @RequestParam(value = "current", defaultValue = "1") Integer current,
+            @RequestParam(value = "x", required = false) Double x,
+            @RequestParam(value = "y", required = false) Double y
     ) {
-        // 根据类型分页查询
-        Page<Shop> page = shopDAO.query()
-                .eq("type_id", typeId)
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
-        // 返回数据
-        return Result.ok(page.getRecords());
+        return shopFacade.queryShopByType(typeId, current, x, y);
     }
 
     /**

@@ -47,4 +47,10 @@ public class ShopFacade {
 
         return Result.ok();
     }
+
+    public Result queryShopByType(Integer typeId, Integer current, Double x, Double y) {
+        List<ShopDTO> shopDTOList = shopService.pageQueryShopByType(typeId, current, x, y);
+
+        return Result.ok(ListUtils.emptyIfNull(shopDTOList).stream().map(ShopDTO::convertToVO).toList());
+    }
 }

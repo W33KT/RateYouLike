@@ -13,4 +13,5 @@ import java.util.List;
 public interface ShopDAO extends IService<Shop> {
     List<Shop> queryShop(ShopQueryDO queryDO);
     void updateShop(ShopDTO shopDTO);
+    List<ShopDTO> pageQueryShopByType(Integer typeId, Integer offset, Integer size);
 }
