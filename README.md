@@ -1,7 +1,7 @@
 # RateYouLike Project Code Overview
 
 ## Project Introduction
-**RateYouLike** is an independent project inspired by a widely-used open-source project https://github.com/cs001020/hmdp from China, reimagined as a scalable local business review application. The platform allows users to explore shops, post reviews, interact with others through likes and comments, and search for nearby stores. The project demonstrates a full-stack approach, focusing on backend service design, system optimization, and clean architecture. Key technologies used include **Java, Spring Boot, MyBatis-Plus, MySQL, Redis, and Kafka**. The project emphasizes modularity, maintainability, and performance optimization in high-concurrency scenarios.
+**RateYouLike** is an independent project. The platform allows users to explore shops, post reviews, interact with others through likes and comments, and search for nearby stores. The project demonstrates a full-stack approach, focusing on backend service design, system optimization, and clean architecture. Key technologies used include **Java, Spring Boot, MyBatis-Plus, MySQL, Redis, and Kafka**. The project emphasizes modularity, maintainability, and performance optimization in high-concurrency scenarios.
 
 ## Code Structure and Branching
 The project repository is organized into two main branches:

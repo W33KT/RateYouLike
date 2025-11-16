@@ -37,4 +37,14 @@ public class UserFacade {
 
         return Result.ok();
     }
+
+    public Result sign() {
+        userService.sign();
+
+        return Result.ok();
+    }
+
+    public Result signCount() {
+        return Result.ok(userService.signCount());
+    }
 }

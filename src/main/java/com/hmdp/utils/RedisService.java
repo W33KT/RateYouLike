@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.connection.RedisCommands;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -106,5 +107,17 @@ public class RedisService {
         }
 
         return result.getContent().stream().skip( start).toList();
+    }
+
+    public void setBitMap(String key, long offset, boolean value) {
+        stringRedisTemplate.opsForValue().setBit(key, offset, value);
+    }
+
+    public List<Long> getSubBitMap(String key, long start, int length) {
+        return stringRedisTemplate.opsForValue().bitField(
+                key,
+                BitFieldSubCommands.create()
+                        .get(BitFieldSubCommands.BitFieldType.unsigned(length)).valueAt( start)
+        );
     }
 }

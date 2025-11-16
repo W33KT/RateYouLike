@@ -8,18 +8,20 @@ import com.hmdp.constants.SystemConstants;
 import com.hmdp.dao.UserDAO;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
-import com.hmdp.utils.RegexUtils;
-import com.hmdp.utils.UserHolder;
-import com.hmdp.utils.ValidateUtils;
+import com.hmdp.utils.*;
 import com.hmdp.vo.request.LoginFormReqVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +35,8 @@ public class UserService {
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private UserDAO userDAO;
+    @Autowired
+    private RedisService redisService;
 
     public void sendCode(String phone, HttpSession session) {
         // 1. validate param and phone number format
@@ -117,5 +121,44 @@ public class UserService {
 
         // 5. write log
         log.info("User {} logout at {}", name, now);
+    }
+
+    public void sign() {
+        Pair<String, Integer> keyDayPair = getSignInfo();
+        int day = keyDayPair.getRight();
+        String key = keyDayPair.getLeft();
+
+        redisService.setBitMap(key, day - 1, true);
+    }
+
+    private Pair<String, Integer> getSignInfo() {
+        UserDTO userDTO = UserHolder.getUser();
+        ValidateUtils.notNull(userDTO, "Please log in~");
+        Long userId = userDTO.getId();
+
+        Pair<String, LocalDateTime> nowPair = DateUtils.getNowByFormat(DateUtils.YYYY_MM);
+        String key = RedisConstants.USER_SIGN_KEY + userId + RedisConstants.SPLIT + nowPair.getLeft();
+
+        int day = nowPair.getRight().getDayOfMonth();
+
+        return Pair.of(key, day);
+    }
+
+    public Integer signCount() {
+        Pair<String, Integer> keyDayPair = getSignInfo();
+        int day = keyDayPair.getRight();
+        String key = keyDayPair.getLeft();
+
+        List<Long> bitMap = redisService.getSubBitMap(key, 0, day);
+        if (CollectionUtils.isEmpty(bitMap)) {
+            return 0;
+        }
+        Long num = bitMap.get(0);
+        int res = 0;
+        while ((num & 1) != 0) {
+            res ++;
+            num = num >> 1;
+        }
+        return res;
     }
 }
